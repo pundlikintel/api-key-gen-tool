@@ -1,0 +1,38 @@
+[required_detail]
+maintainer_email="pundlik.sarafdar@intel.com"
+tenants_count=1
+att_keys_per_tenant=1
+mgmt_key_per_tenant=1
+service_id="6c1f099c-49ff-4e7c-b42a-899ed78f275c"
+attestation_product_id="c9ae42c4-73c3-47c2-9c22-ce70e406591b"
+management_product_id="24e8554a-dbf7-4a36-94b5-ab6232a52028"
+email_domain="example.com"
+report_tmpl="{{tenant_id}},{{id}},{{variable_key}},{{api_key}},{{version}},{{full_key}},{{key_type}},{{policy_id}}"
+report_file="report_%d.csv"
+
+[policies_config]
+policies_per_tennant=1
+policy="default matches_sgx_policy = true\r\nmatches_sgx_policy = true {\r\ninput.sgx_is_debuggable == false\r\ninput.sgx_mrenclave == \"83f4e819861adef6ffb2a4865efea9337b91ed30fa33491b17f0d5d9e8204410}\"\r\ninput.sgx_mrsigner == \"83d719e77deaca1470f6baf62a4d774303c899db69020f9c70ee1dfc08c7ce9f\"\r\n}"
+policy_name="sgx-perf-policy1"
+policy_type="Appraisal policy"
+attestation_type="SGX Attestation"
+service_offer_id="1398df08-5ad0-4b23-a15c-a0b845a3299b"
+ap_url="https://api-perf2-user1.project-amber-smas.com/management/v1/policies"
+#pickup from plans table
+plan_id="21a61d35-252c-48ab-b342-b41fde768d95"
+#pickup from service_offer_plan_source table
+service_offer_plan_source_id="2a55bdd9-5f43-4b22-b656-f1b24cb28580"
+
+[db_conf]
+host="amber-rds-us-east-1-perf2.c5eypimmiglr.us-east-1.rds.amazonaws.com"
+user="postgres"
+password="amberDevOps123"
+port=5432
+db_name="perf2-user1"
+ssl_mode="require"
+
+[aws_conf]
+access_key_id="ASIA2XPGCFLFWOFMLB4F"
+secret_access_key="jKG1+HVOLy7M7ly2Os7rf/HjlGOAm2WjYyzFJfdZ"
+session_token="IQoJb3JpZ2luX2VjEG0aCXVzLXdlc3QtMiJHMEUCIQD6FycdXKLR2Jq3+8eXaTfM64A+b8I9mnwhDZo2O4MkfAIgB29PclbwkR89pUJHeGt/durK/NMC/ATitc0zQOBihaUqkgMI5v//////////ARABGgw3Mzc2MDYyNDkxNjMiDEdXG9edG1m4ur8GiyrmAtrV3RY2FurW8N5/y1S8eVjP5+SO4en8dZJ6+uxiQfsspLA7scsdlKoP5/DnyjXCZmg0YKBDDlEu7905DD503Ce9f4tQN+MlPQm+mk8JPfzan+a0B4UFzydurFFHMwJMcyUVQ625MQdQcWQXhSbgZXjJa+78ahS9+xGAm141VKeZxGz/lR2vla+M9SjLo8EKjlJ8IHPDdPVTo17cc8Jr9kpQbhGPCiZu636f/5Stm51Rd2kkFLoyrBbm1q0H/ijpHmWCe03ISS0YokBq3o2vNVNHAR2KXvmEQqqgIPz6/BFJQo5biPwqyokm/pirY9RS0d2vtgTLzzTaZAVPBaMLyU8o36RYufFeO9SJ5KBDAGm97aY4OvLlkCBebhYw05LmPLpwYl+2WYera4ZGoR1eH7Y5OKIwR0vVSNOvvv44kn1TZzfM9zJAZAVeXNDIkyaQ8VGbLPV8gyrWKW4ZxRk6x4fZhsqAriEwocrVsgY6pgHg4+/NXYP9wpCCR4HrvlFHx7XSF12keq6J1h6tmeYT0yzYeA2d6prTpAYAwZIlB8JVHwzxLEORdaqU+DXNXG82vI0z4RvomjymCBdxyAzl49DUi1CPKT8/nJYlmqkUZnsxVYDse2uCvd78/kDLMBLKdfYoZZRnsKIv+2TgOm/jJFhTiQNDoTaCw2oNAM8OrIwinEbumiR29K84mANGP9t5+8bazibd"
+aws_region="us-east-1"
