@@ -24,11 +24,11 @@ plan_id="21a61d35-252c-48ab-b342-b41fde768d95"
 service_offer_plan_source_id="2a55bdd9-5f43-4b22-b656-f1b24cb28580"
 
 [db_conf]
-host="amber-rds-us-east-1-perf2.c5eypimmiglr.us-east-1.rds.amazonaws.com"
-user="postgres"
-password="amberDevOps123"
-port=5432
-db_name="perf2-user1"
+host=<>
+user=<>
+password=<>
+port=<>
+db_name=<>
 ssl_mode="require"
 
 [aws_conf]
