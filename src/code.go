@@ -68,7 +68,7 @@ func CreateTenant(ctx context.Context, tenantsCount int, tx *gorm.DB, emailDomai
 	return tenantsId, nil
 }
 
-func CreateAPIKey(ctx context.Context, attestationKeysPerTenant, managementKeysPerTenant int, tx *gorm.DB, tenantId, attestationProductId, managementProductId,
+func CreateAPIKey(ctx context.Context, attestationKeysPerTenant, managementKeysPerTenant, policiesCount int, tx *gorm.DB, tenantId, attestationProductId, managementProductId,
 	serviceId uuid.UUID, attProductExtId, mgmtProductExtId, email string) ([]model.ApiKeyModel, error) {
 	var apiKeyModels []model.ApiKeyModel
 
@@ -78,7 +78,7 @@ func CreateAPIKey(ctx context.Context, attestationKeysPerTenant, managementKeysP
 	}
 
 	for i := 0; i < managementKeysPerTenant; i++ {
-		apiKeyInfo, err := createApiKey(ctx, tx, managementProductId, serviceId, tenantId, mgmtProductExtId, email, "")
+		apiKeyInfo, err := createApiKey(ctx, tx, managementProductId, serviceId, tenantId, mgmtProductExtId, email, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -89,26 +89,38 @@ func CreateAPIKey(ctx context.Context, attestationKeysPerTenant, managementKeysP
 	logrus.Infof("Sleeping for 2 minutes to set management api keys")
 	time.Sleep(2 * time.Minute)
 
-	for i := 0; i < attestationKeysPerTenant; i++ {
-		//Create policy
+	var policyIds []string
+	//Create policy
+
+	for i := 0; i < policiesCount; i++ {
 		policyId, err := CreatePolicy(ctx, conf.PoliciesConfig.Url, apiKeyModels[0].FullKey)
 		if err != nil {
 			return nil, err
 		}
+		policyIds = append(policyIds, policyId)
+	}
 
-		apiKeyInfo, err := createApiKey(ctx, tx, attestationProductId, serviceId, tenantId, attProductExtId, email, policyId)
+	for i := 0; i < attestationKeysPerTenant; i++ {
+		rPoliciesCount := randRange(0, policiesCount)
+		randomPolicyIds := policyIds[0:rPoliciesCount]
+		apiKeyInfo, err := createApiKey(ctx, tx, attestationProductId, serviceId, tenantId, attProductExtId, email, randomPolicyIds)
 		if err != nil {
 			return nil, err
 		}
+		logrus.Infof("Policy id [%s], for api key id [%s]", strings.Join(randomPolicyIds, " , "), apiKeyInfo.ID.String())
 		apiKeyInfo.KeyType = "attestation"
-		apiKeyInfo.PolicyId = uuid.MustParse(policyId)
+		apiKeyInfo.PolicyId = strings.Join(randomPolicyIds, " | ")
 		apiKeyModels = append(apiKeyModels, apiKeyInfo)
 	}
 
 	return apiKeyModels, nil
 }
 
-func createApiKey(ctx context.Context, tx *gorm.DB, productId, serviceId, tenantId uuid.UUID, prdExtId, email, policyId string) (model.ApiKeyModel, error) {
+func randRange(min, max int) int {
+	return rand.Intn(max-min) + min
+}
+
+func createApiKey(ctx context.Context, tx *gorm.DB, productId, serviceId, tenantId uuid.UUID, prdExtId, email string, policyIds []string) (model.ApiKeyModel, error) {
 	apiKey := uuid.New()
 	variableKey := uuid.NewString()
 	name := fmt.Sprintf("ApiKey_Perf_%s", uuid.NewString())
@@ -138,7 +150,7 @@ func createApiKey(ctx context.Context, tx *gorm.DB, productId, serviceId, tenant
 		return model.ApiKeyModel{}, err
 	}
 
-	if policyId != "" {
+	for _, policyId := range policyIds {
 		err = database.MakeSubscriptionPolicyEntry(ctx, tx, &model.SubscriptionPolicy{
 			TenantId:       tenantId,
 			SubscriptionId: apiKey,
@@ -172,14 +184,16 @@ func CreatePolicy(ctx context.Context, url, managementKey string) (policyId stri
 		logrus.Errorf("error in config file %v", err)
 		return
 	}
+
+	rStr := fmt.Sprintf("%d", randRange(1000000, 9999999))
 	policy := model.PolicyModel{
-		PolicyName:      conf.PoliciesConfig.PolicyName,
+		PolicyName:      strings.ReplaceAll(conf.PoliciesConfig.PolicyName, "{count_ext}", rStr),
 		PolicyType:      conf.PoliciesConfig.PolicyType,
 		AttestationType: conf.PoliciesConfig.AttestationType,
 		ServiceOfferId:  conf.PoliciesConfig.ServiceOfferId,
 	}
-	policy.Policy = strings.ReplaceAll(conf.PoliciesConfig.Policy, "{sgx_mrenclave}", RandStringRunes(64))
-	policy.Policy = strings.ReplaceAll(policy.Policy, "{sgx_mrsigner}", RandStringRunes(64))
+
+	policy.Policy = strings.ReplaceAll(conf.PoliciesConfig.Policy, "{count_ext}", rStr)
 	postBody, err := json.Marshal(policy)
 	responseBody := bytes.NewBuffer(postBody)
 	req, err := http.NewRequest("POST", url, responseBody)

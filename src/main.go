@@ -14,7 +14,7 @@ func main() {
 	CleanUpPtr := flag.Bool("cleanup", false, "clean up database and AWS resources")
 	flag.Parse()
 	if !*CleanUpPtr {
-		logrus.Info("Creating API keys")
+		logrus.Info("Starting Creating API keys")
 		Create(ctx)
 	} else {
 		logrus.Info("Cleaning up")

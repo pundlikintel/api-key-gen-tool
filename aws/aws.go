@@ -63,9 +63,10 @@ func CreateApiKey(ctx context.Context, name, subscriptionId, prdExtId, email str
 	return *apiKeyOut.Id, *apiKeyOut.Value, nil
 }
 
-func CleanupApiKeys(ctx context.Context, id string) {
+func CleanupApiKeys(ctx context.Context, id string) error {
 	_, err := awsClient.DeleteApiKey(ctx, &apigateway.DeleteApiKeyInput{ApiKey: aws.String(id)})
 	if err != nil {
 		logrus.Errorf("Error in delete key from aws %s", id)
 	}
+	return err
 }

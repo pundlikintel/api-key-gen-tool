@@ -94,6 +94,53 @@ func DeleteSubscriptions(ctx context.Context, tx *gorm.DB, tenantEmailDomain str
 	if res.Error != nil {
 		logrus.Errorf("Error in deleting subscriptions %v", res.Error)
 		return res.Error
+	} else {
+		logrus.Infof("%d subscriptions deleted", res.RowsAffected)
+	}
+	return nil
+}
+
+func DeletePolicies(ctx context.Context, tx *gorm.DB, tenantEmailDomain string) error {
+	if strings.TrimSpace(tenantEmailDomain) == "" {
+		return errors.New("tenantEmailDomain can not be empty")
+	}
+	query := fmt.Sprintf("delete from policy where cast( tenant_id as uuid) in (select id from tenant where email like '%s@%s')", "%", tenantEmailDomain)
+	res := tx.Exec(query)
+	if res.Error != nil {
+		logrus.Errorf("Error in deleting policies %v", res.Error)
+		return res.Error
+	} else {
+		logrus.Infof("%d Policies deleted", res.RowsAffected)
+	}
+	return nil
+}
+
+func DeleteService(ctx context.Context, tx *gorm.DB, tenantEmailDomain string) error {
+	if strings.TrimSpace(tenantEmailDomain) == "" {
+		return errors.New("tenantEmailDomain can not be empty")
+	}
+	query := fmt.Sprintf("delete from service where tenant_id in (select id from tenant where email like '%s@%s')", "%", tenantEmailDomain)
+	res := tx.Exec(query)
+	if res.Error != nil {
+		logrus.Errorf("Error in deleting Service %v", res.Error)
+		return res.Error
+	} else {
+		logrus.Infof("%d Services deleted", res.RowsAffected)
+	}
+	return nil
+}
+
+func DeleteTenants(ctx context.Context, tx *gorm.DB, tenantEmailDomain string) error {
+	if strings.TrimSpace(tenantEmailDomain) == "" {
+		return errors.New("tenantEmailDomain can not be empty")
+	}
+	query := fmt.Sprintf("delete from tenant where email like '%s@%s'", "%", tenantEmailDomain)
+	res := tx.Exec(query)
+	if res.Error != nil {
+		logrus.Errorf("Error in deleting tenants %v", res.Error)
+		return res.Error
+	} else {
+		logrus.Infof("%d tenants deleted", res.RowsAffected)
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/apikey-gen/aws"
 	"github.com/apikey-gen/database"
 	"github.com/apikey-gen/model"
@@ -43,12 +44,79 @@ func CleanUp(ctx context.Context) {
 		return
 	}
 
+	var ers []error
 	for _, id := range ids {
-		aws.CleanupApiKeys(ctx, id)
+		err = aws.CleanupApiKeys(ctx, id)
+		if err != nil {
+			ers = append(ers, err)
+		}
 	}
+	if len(ids) == len(ers) && len(ers) > 0 {
+		var resp string
+		fmt.Println("All delete api key calls failed, Do you want to terminate? (y/n)")
+		for {
+			_, err := fmt.Scanln(&resp)
+			if err != nil {
+				return
+			}
+			if resp == "y" {
+				return
+			} else if resp == "n" {
+				break
+			}
+		}
+	}
+
 	err = database.DeleteSubscriptions(ctx, tx, conf.RequiredDetail.EmailDomain)
 	if err != nil {
 		return
 	}
+
+	err = database.DeletePolicies(ctx, tx, conf.RequiredDetail.EmailDomain)
+	if err != nil {
+		return
+	}
+
+	err = database.DeleteService(ctx, tx, conf.RequiredDetail.EmailDomain)
+	if err != nil {
+		return
+	}
+
+	err = database.DeleteTenants(ctx, tx, conf.RequiredDetail.EmailDomain)
+	if err != nil {
+		return
+	}
+
+	var resp string
+	fmt.Println("Do you want to COMMIT transaction. All deleted data will can not be restored once deleted? (yes/no)")
+	for {
+		_, err := fmt.Scanln(&resp)
+		if err != nil {
+			return
+		}
+		if resp == "yes" {
+			break
+		} else if resp == "no" {
+			return
+		} else {
+			logrus.Info("Type yes/no")
+		}
+	}
+
+	fmt.Println("Reconfirm. All deleted data will can not be restored once deleted? (yes/no)")
+	for {
+		_, err := fmt.Scanln(&resp)
+		if err != nil {
+			return
+		}
+		if resp == "yes" {
+			break
+		} else if resp == "no" {
+			return
+		} else {
+			logrus.Info("Type yes/no")
+		}
+	}
+
 	tx.Commit()
 }

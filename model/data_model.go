@@ -76,7 +76,7 @@ type ApiKeyModel struct {
 	Version     string    `json:"version"`
 	FullKey     string    `json:"full_key"`
 	KeyType     string    `json:"key_type"`
-	PolicyId    uuid.UUID `json:"policy_id"`
+	PolicyId    string    `json:"policy_id"`
 }
 
 type PolicyModel struct {

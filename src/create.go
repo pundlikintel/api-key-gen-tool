@@ -63,6 +63,7 @@ func Create(ctx context.Context) {
 	tenantsCount := conf.RequiredDetail.TenantsCount
 	keysPerTenant := conf.RequiredDetail.AttKeyPerTenant
 	mgmtkeysPerTenant := conf.RequiredDetail.MagtKeyPerTenant
+	policiesCount := conf.PoliciesConfig.PolicyCount
 	tenants, err := CreateTenant(ctx, tenantsCount, tx, conf.RequiredDetail.EmailDomain,
 		uuid.MustParse(conf.PoliciesConfig.ServiceOfferId), uuid.MustParse(conf.PoliciesConfig.PlanId), uuid.MustParse(conf.PoliciesConfig.ServiceOfferPlanSourceId))
 	if err != nil {
@@ -81,7 +82,7 @@ func Create(ctx context.Context) {
 	apiKeysInfos := make([]model.ApiKeyModel, 0)
 	for _, tenant := range tenants {
 		logrus.Infof("Creating api keys for tenant %s", tenant.ID)
-		apiKeyInfo, err := CreateAPIKey(ctx, keysPerTenant, mgmtkeysPerTenant, connection, tenant.ID, attestationProductId, managementProductId, tenant.ServiceId,
+		apiKeyInfo, err := CreateAPIKey(ctx, keysPerTenant, mgmtkeysPerTenant, policiesCount, connection, tenant.ID, attestationProductId, managementProductId, tenant.ServiceId,
 			attestationProductExtId, managementProductExtId, conf.RequiredDetail.MaintainerEmail)
 		if err != nil {
 			logrus.Errorf("error in create api key %v", err)

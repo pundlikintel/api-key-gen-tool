@@ -42,6 +42,7 @@ type PoliciesConfig struct {
 	Url                      string `json:"url" mapstructure:"ap_url"`
 	PlanId                   string `json:"plan_id" mapstructure:"plan_id"`
 	ServiceOfferPlanSourceId string `json:"service_offer_plan_source_id" mapstructure:"service_offer_plan_source_id"`
+	PolicyCount              int    `json:"policy_count" mapstructure:"policies_per_tennant"`
 }
 
 type Config struct {
