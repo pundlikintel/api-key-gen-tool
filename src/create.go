@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -80,18 +81,22 @@ func Create(ctx context.Context) {
 
 	tx.Commit() //has to commit otherwise create policy will fail
 	apiKeysInfos := make([]model.ApiKeyModel, 0)
+	wg := sync.WaitGroup{}
+	wg.Add(len(tenants))
 	for _, tenant := range tenants {
-		logrus.Infof("Creating api keys for tenant %s", tenant.ID)
-		apiKeyInfo, err := CreateAPIKey(ctx, keysPerTenant, mgmtkeysPerTenant, policiesCount, connection, tenant.ID, attestationProductId, managementProductId, tenant.ServiceId,
-			attestationProductExtId, managementProductExtId, conf.RequiredDetail.MaintainerEmail)
-		if err != nil {
-			logrus.Errorf("error in create api key %v", err)
-			return
-		}
-		apiKeysInfos = append(apiKeysInfos, apiKeyInfo...)
+		go func(wgPtr *sync.WaitGroup) {
+			defer wg.Done()
+			logrus.Infof("Creating api keys for tenant %s", tenant.ID)
+			apiKeyInfo, err := CreateAPIKey(ctx, keysPerTenant, mgmtkeysPerTenant, policiesCount, connection, tenant.ID, attestationProductId, managementProductId, tenant.ServiceId,
+				attestationProductExtId, managementProductExtId, conf.RequiredDetail.MaintainerEmail)
+			if err != nil {
+				logrus.Errorf("error in create api key %v", err)
+				return
+			}
+			apiKeysInfos = append(apiKeysInfos, apiKeyInfo...)
+		}(&wg)
 	}
-
-	//tx.Commit()
+	wg.Wait()
 	ExportToFile(ctx, conf.RequiredDetail.ReportFileName, conf.RequiredDetail.ReportTmpl, apiKeysInfos)
 }
 

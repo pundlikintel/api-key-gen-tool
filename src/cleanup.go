@@ -9,11 +9,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func CleanUp(ctx context.Context) {
+func CleanUp(ctx context.Context, count ...int) {
 	conf, err := model.GetConfig(ctx, "properties.toml")
+	clanupCont := -1
 	if err != nil {
 		logrus.Errorf("error in config file %v", err)
 		return
+	}
+
+	if len(count) > 0 {
+		clanupCont = count[0]
 	}
 
 	/************** AWS init *******************/
@@ -67,22 +72,22 @@ func CleanUp(ctx context.Context) {
 		}
 	}
 
-	err = database.DeleteSubscriptions(ctx, tx, conf.RequiredDetail.EmailDomain)
+	err = database.DeleteSubscriptions(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
 	if err != nil {
 		return
 	}
 
-	err = database.DeletePolicies(ctx, tx, conf.RequiredDetail.EmailDomain)
+	err = database.DeletePolicies(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
 	if err != nil {
 		return
 	}
 
-	err = database.DeleteService(ctx, tx, conf.RequiredDetail.EmailDomain)
+	err = database.DeleteService(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
 	if err != nil {
 		return
 	}
 
-	err = database.DeleteTenants(ctx, tx, conf.RequiredDetail.EmailDomain)
+	err = database.DeleteTenants(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
 	if err != nil {
 		return
 	}

@@ -16,8 +16,16 @@ Make required change in [properties.toml](properties.toml) file
 ```
 
 ### Cleanup
+#### Cleanup all records
 ```bash
-    .\api-key-gen -cleanup
+    .\api-key-gen -cleanup all
+```
+#### Cleanup given number of records
+.\api-key-gen -cleanup <number of record to clean>
+
+```bash
+    .\api-key-gen -cleanup 5
+    
 ```
 
 `Note`: Cleanup will use email_domain parameter from properties.toml file to delete all the tenants with that domain.
