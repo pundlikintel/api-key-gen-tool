@@ -92,7 +92,7 @@ func DeleteSubscriptions(ctx context.Context, tx *gorm.DB, tenantEmailDomain str
 
 	query := fmt.Sprintf("delete from subscription where tenant_id in (select id from tenant where email like '%s@%s')", "%", tenantEmailDomain)
 	if count > 0 {
-		query = fmt.Sprintf("delete from subscription where tenant_id in (select id from tenant where email like '%s@%s' limit %d)", "%", tenantEmailDomain, count)
+		query = fmt.Sprintf("delete from subscription where tenant_id in (select id from tenant where email like '%s@%s' order by id limit %d)", "%", tenantEmailDomain, count)
 	}
 
 	res := tx.Exec(query)
@@ -111,7 +111,7 @@ func DeletePolicies(ctx context.Context, tx *gorm.DB, tenantEmailDomain string, 
 	}
 	query := fmt.Sprintf("delete from policy where cast( tenant_id as uuid) in (select id from tenant where email like '%s@%s')", "%", tenantEmailDomain)
 	if count > 0 {
-		query = fmt.Sprintf("delete from policy where cast( tenant_id as uuid) in (select id from tenant where email like '%s@%s' limit %d)", "%", tenantEmailDomain, count)
+		query = fmt.Sprintf("delete from policy where cast( tenant_id as uuid) in (select id from tenant where email like '%s@%s' order by id limit %d)", "%", tenantEmailDomain, count)
 	}
 	res := tx.Exec(query)
 	if res.Error != nil {
@@ -129,7 +129,7 @@ func DeleteService(ctx context.Context, tx *gorm.DB, tenantEmailDomain string, c
 	}
 	query := fmt.Sprintf("delete from service where tenant_id in (select id from tenant where email like '%s@%s')", "%", tenantEmailDomain)
 	if count > 0 {
-		query = fmt.Sprintf("delete from service where tenant_id in (select id from tenant where email like '%s@%s' limit %d)", "%", tenantEmailDomain, count)
+		query = fmt.Sprintf("delete from service where tenant_id in (select id from tenant where email like '%s@%s' order by id limit %d)", "%", tenantEmailDomain, count)
 	}
 	res := tx.Exec(query)
 	if res.Error != nil {
@@ -147,7 +147,7 @@ func DeleteTenants(ctx context.Context, tx *gorm.DB, tenantEmailDomain string, c
 	}
 	query := fmt.Sprintf("delete from tenant where email like '%s@%s'", "%", tenantEmailDomain)
 	if count > 0 {
-		query = fmt.Sprintf("delete from tenant where email like '%s@%s' limit %d", "%", tenantEmailDomain, count)
+		query = fmt.Sprintf("delete from tenant where id in (select id from tenant where email like '%s@%s' order by id limit %d)", "%", tenantEmailDomain, count)
 	}
 	res := tx.Exec(query)
 	if res.Error != nil {

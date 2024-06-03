@@ -23,11 +23,6 @@ func Create(ctx context.Context) {
 		return
 	}
 
-	/*serviceId, err := uuid.Parse(conf.RequiredDetail.ServiceId)
-	if err != nil {
-		logrus.Errorf("error in parsing service id %s, %v", conf.RequiredDetail.ServiceId, err)
-		return
-	}*/
 	attestationProductId, err := uuid.Parse(conf.RequiredDetail.AttestationProductId)
 	if err != nil {
 		logrus.Errorf("error in parsing attestation product id %s, %v", conf.RequiredDetail.AttestationProductId, err)
