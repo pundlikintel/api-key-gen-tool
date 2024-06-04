@@ -67,6 +67,8 @@ func CleanupApiKeys(ctx context.Context, id string) error {
 	_, err := awsClient.DeleteApiKey(ctx, &apigateway.DeleteApiKeyInput{ApiKey: aws.String(id)})
 	if err != nil {
 		logrus.Errorf("Error in delete key from aws %s", id)
+	} else {
+		logrus.Infof("Deleted api key %s", id)
 	}
 	return err
 }

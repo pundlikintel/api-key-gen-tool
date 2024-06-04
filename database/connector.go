@@ -29,6 +29,27 @@ func GetConnection(ctx context.Context, cfg model.DBConf) (db *gorm.DB, err erro
 	return db, err
 }
 
+func GetTenantSourceId(ctx context.Context, tx *gorm.DB, sourceName string) (uuid.UUID, error) {
+	res := tx.Raw("select id from source where name=?", sourceName)
+	if res.Error != nil {
+		return uuid.UUID{}, res.Error
+	}
+	if rows, err := res.Rows(); err != nil {
+		return uuid.UUID{}, err
+	} else {
+		for rows.Next() {
+			var sUid uuid.UUID
+			err := rows.Scan(&sUid)
+			if err != nil {
+				return uuid.UUID{}, err
+			} else {
+				return sUid, nil
+			}
+		}
+	}
+	return uuid.UUID{}, errors.New("no uuid")
+}
+
 func MakeTenantEntry(ctx context.Context, tx *gorm.DB, tenant *model.Tenant) error {
 	t := tx.Create(tenant)
 	return t.Error
@@ -60,12 +81,15 @@ func GetProductExtId(ctx context.Context, tx *gorm.DB, productId uuid.UUID) (str
 	return externalId, nil
 }
 
-func GetSubscriptionIds(ctx context.Context, tx *gorm.DB, tenantEmailDomain string) ([]string, error) {
+func GetSubscriptionIds(ctx context.Context, tx *gorm.DB, tenantEmailDomain string, count int) ([]string, error) {
 	if strings.TrimSpace(tenantEmailDomain) == "" {
 		return nil, errors.New("tenantEmailDomain can not be empty")
 	}
 	extIds := make([]string, 0)
 	query := fmt.Sprintf("select external_id from subscription where tenant_id in (select id from tenant where email like '%s@%s')", "%", tenantEmailDomain)
+	if count > 0 {
+		query = fmt.Sprintf("select external_id from subscription where tenant_id in (select id from tenant where email like '%s@%s' order by id limit %d)", "%", tenantEmailDomain, count)
+	}
 	res := tx.Raw(query)
 	if res.Error != nil {
 		return nil, res.Error

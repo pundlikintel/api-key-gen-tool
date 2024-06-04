@@ -11,14 +11,14 @@ import (
 
 func CleanUp(ctx context.Context, count ...int) {
 	conf, err := model.GetConfig(ctx, "properties.toml")
-	clanupCont := -1
+	cleanupCount := -1
 	if err != nil {
 		logrus.Errorf("error in config file %v", err)
 		return
 	}
 
 	if len(count) > 0 {
-		clanupCont = count[0]
+		cleanupCount = count[0]
 	}
 
 	/************** AWS init *******************/
@@ -44,7 +44,7 @@ func CleanUp(ctx context.Context, count ...int) {
 	tx := connection.Begin()
 	defer tx.Rollback()
 
-	ids, err := database.GetSubscriptionIds(ctx, tx, conf.RequiredDetail.EmailDomain)
+	ids, err := database.GetSubscriptionIds(ctx, tx, conf.RequiredDetail.EmailDomain, cleanupCount)
 	if err != nil {
 		return
 	}
@@ -72,22 +72,22 @@ func CleanUp(ctx context.Context, count ...int) {
 		}
 	}
 
-	err = database.DeleteSubscriptions(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
+	err = database.DeleteSubscriptions(ctx, tx, conf.RequiredDetail.EmailDomain, cleanupCount)
 	if err != nil {
 		return
 	}
 
-	err = database.DeletePolicies(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
+	err = database.DeletePolicies(ctx, tx, conf.RequiredDetail.EmailDomain, cleanupCount)
 	if err != nil {
 		return
 	}
 
-	err = database.DeleteService(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
+	err = database.DeleteService(ctx, tx, conf.RequiredDetail.EmailDomain, cleanupCount)
 	if err != nil {
 		return
 	}
 
-	err = database.DeleteTenants(ctx, tx, conf.RequiredDetail.EmailDomain, clanupCont)
+	err = database.DeleteTenants(ctx, tx, conf.RequiredDetail.EmailDomain, cleanupCount)
 	if err != nil {
 		return
 	}

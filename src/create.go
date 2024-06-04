@@ -60,8 +60,21 @@ func Create(ctx context.Context) {
 	keysPerTenant := conf.RequiredDetail.AttKeyPerTenant
 	mgmtkeysPerTenant := conf.RequiredDetail.MagtKeyPerTenant
 	policiesCount := conf.PoliciesConfig.PolicyCount
+
+	tSource := "Amber"
+	if conf.RequiredDetail.TenantSource != "" {
+		tSource = conf.RequiredDetail.TenantSource
+	}
+
+	var sUid uuid.UUID
+	if sourceId, err := database.GetTenantSourceId(ctx, connection, tSource); err != nil {
+		logrus.Errorf("error in getting source id %v", err)
+		return
+	} else {
+		sUid = sourceId
+	}
 	tenants, err := CreateTenant(ctx, tenantsCount, tx, conf.RequiredDetail.EmailDomain,
-		uuid.MustParse(conf.PoliciesConfig.ServiceOfferId), uuid.MustParse(conf.PoliciesConfig.PlanId), uuid.MustParse(conf.PoliciesConfig.ServiceOfferPlanSourceId))
+		uuid.MustParse(conf.PoliciesConfig.ServiceOfferId), uuid.MustParse(conf.PoliciesConfig.PlanId), uuid.MustParse(conf.PoliciesConfig.ServiceOfferPlanSourceId), sUid)
 	if err != nil {
 		return
 	}
@@ -78,18 +91,18 @@ func Create(ctx context.Context) {
 	apiKeysInfos := make([]model.ApiKeyModel, 0)
 	wg := sync.WaitGroup{}
 	wg.Add(len(tenants))
-	for _, tenant := range tenants {
-		go func(wgPtr *sync.WaitGroup) {
+	for _, t := range tenants {
+		go func(wgPtr *sync.WaitGroup, tenantI Tenant) {
 			defer wg.Done()
-			logrus.Infof("Creating api keys for tenant %s", tenant.ID)
-			apiKeyInfo, err := CreateAPIKey(ctx, keysPerTenant, mgmtkeysPerTenant, policiesCount, connection, tenant.ID, attestationProductId, managementProductId, tenant.ServiceId,
+			logrus.Infof("Creating api keys for tenant %s", tenantI.ID)
+			apiKeyInfo, err := CreateAPIKey(ctx, keysPerTenant, mgmtkeysPerTenant, policiesCount, connection, tenantI.ID, attestationProductId, managementProductId, tenantI.ServiceId,
 				attestationProductExtId, managementProductExtId, conf.RequiredDetail.MaintainerEmail)
 			if err != nil {
 				logrus.Errorf("error in create api key %v", err)
 				return
 			}
 			apiKeysInfos = append(apiKeysInfos, apiKeyInfo...)
-		}(&wg)
+		}(&wg, t)
 	}
 	wg.Wait()
 	ExportToFile(ctx, conf.RequiredDetail.ReportFileName, conf.RequiredDetail.ReportTmpl, apiKeysInfos)

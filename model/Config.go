@@ -24,6 +24,7 @@ type RequiredDetail struct {
 	EmailDomain          string `json:"email_domain" mapstructure:"email_domain"`
 	ReportTmpl           string `json:"report_tmpl" mapstructure:"report_tmpl"`
 	ReportFileName       string `json:"report_file" mapstructure:"report_file"`
+	TenantSource         string `json:"tenant_source" mapstructure:"tenant_source"`
 }
 
 type AwsConf struct {

@@ -24,17 +24,18 @@ type Tenant struct {
 	ServiceId uuid.UUID `json:"service_id"`
 }
 
-func CreateTenant(ctx context.Context, tenantsCount int, tx *gorm.DB, emailDomain string, serviceOfferId, planId, serviceOfferPlanSourceId uuid.UUID) ([]Tenant, error) {
+func CreateTenant(ctx context.Context, tenantsCount int, tx *gorm.DB, emailDomain string, serviceOfferId, planId, serviceOfferPlanSourceId, sourceId uuid.UUID) ([]Tenant, error) {
 	var tenantsId []Tenant
 	for i := 0; i < tenantsCount; i++ {
 		tenantId := uuid.New()
 		serviceId := uuid.New()
 		err := database.MakeTenantEntry(ctx, tx, &model.Tenant{
-			ID:      tenantId,
-			Name:    "TestName",
-			Company: "TestCompany",
-			Email:   fmt.Sprintf("%s@%s", uuid.NewString(), emailDomain),
-			Address: "address",
+			ID:       tenantId,
+			Name:     fmt.Sprintf("TestName_%s", tenantId),
+			Company:  fmt.Sprintf("TestCompany_%s", tenantId),
+			Email:    fmt.Sprintf("%s@%s", uuid.NewString(), emailDomain),
+			Address:  "address",
+			SourceId: sourceId,
 		})
 		if err != nil {
 			return nil, err
@@ -86,8 +87,9 @@ func CreateAPIKey(ctx context.Context, attestationKeysPerTenant, managementKeysP
 		apiKeyModels = append(apiKeyModels, apiKeyInfo)
 	}
 
-	logrus.Infof("Sleeping for 2 minutes to set management api keys")
-	time.Sleep(2 * time.Minute)
+	timeToSleep := 120 * time.Second
+	logrus.Infof("Sleeping for %v minutes to set management api keys", timeToSleep)
+	time.Sleep(timeToSleep)
 
 	var policyIds []string
 	//Create policy
